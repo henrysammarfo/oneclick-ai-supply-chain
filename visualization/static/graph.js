@@ -1,10 +1,33 @@
-// D3.js Force-Directed Supply Chain Graph
+﻿// D3.js Force-Directed Supply Chain Graph
 (function() {
     const svg = d3.select('#graph');
     const tooltip = d3.select('#tooltip');
     const container = document.querySelector('.graph-container');
     const width = container.clientWidth;
     const height = container.clientHeight;
+
+    function getApiBase() {
+        const params = new URLSearchParams(location.search);
+        const fromQuery = params.get('api');
+        const base = fromQuery || window.API_BASE || '';
+        return base.replace(/\/$/, '');
+    }
+
+    function apiUrl(path) {
+        const base = getApiBase();
+        return base ? base + path : path;
+    }
+
+    function wsBase() {
+        const base = getApiBase();
+        if (!base) return '';
+        try {
+            const url = new URL(base);
+            return (url.protocol === 'https:' ? 'wss://' : 'ws://') + url.host;
+        } catch {
+            return '';
+        }
+    }
 
     svg.attr('width', width).attr('height', height);
 
@@ -25,7 +48,7 @@
     async function loadGraph() {
         let data;
         try {
-            const resp = await fetch('/api/graph');
+            const resp = await fetch(apiUrl('/api/graph'));
             data = await resp.json();
         } catch {
             data = getDemoData();
@@ -35,6 +58,7 @@
     }
 
     function render(data) {
+        g.selectAll('*').remove();
         const { nodes, links } = data;
 
         const simulation = d3.forceSimulation(nodes)
@@ -157,11 +181,25 @@
 
     loadGraph();
 
-    // WebSocket for live agent feed
+    // WebSocket for live agent feed and graph updates
     try {
-        const ws = new WebSocket('ws://' + location.hostname + ':8001/ws/feed');
+        const base = wsBase();
+        const wsUrl = (base ? base : (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host) + '/ws/feed';
+        const ws = new WebSocket(wsUrl);
         ws.onmessage = function(event) {
             const msg = JSON.parse(event.data);
+
+            if (msg.graph) {
+                render(msg.graph);
+                updateStats(msg.graph);
+                return;
+            }
+            if (msg.type === 'graph_update' && msg.graph) {
+                render(msg.graph);
+                updateStats(msg.graph);
+                return;
+            }
+
             const feed = document.getElementById('agent-feed');
             const item = document.createElement('div');
             item.className = 'feed-item';
@@ -169,9 +207,68 @@
             typeSpan.className = 'type';
             typeSpan.textContent = '[' + msg.type + '] ';
             item.appendChild(typeSpan);
-            item.appendChild(document.createTextNode(msg.from + ' \u2192 ' + msg.to));
+            item.appendChild(document.createTextNode(msg.from + ' → ' + msg.to));
             feed.prepend(item);
             if (feed.children.length > 50) feed.lastChild.remove();
         };
     } catch(e) { console.log('WebSocket not available'); }
+
+    // Run demo from UI
+    const runBtn = document.getElementById('run-button');
+    const runInput = document.getElementById('run-product');
+    const runStatus = document.getElementById('run-status');
+
+    async function pollStatus() {
+        try {
+            const resp = await fetch(apiUrl('/api/status'));
+            const data = await resp.json();
+            if (data.running) {
+                runStatus.textContent = 'Running...';
+                setTimeout(pollStatus, 2000);
+            } else {
+                runStatus.textContent = data.error ? 'Error: ' + data.error : 'Completed';
+                loadGraph();
+            }
+        } catch {
+            runStatus.textContent = 'Status check failed';
+        }
+    }
+
+    async function triggerRun() {
+        const product = (runInput.value || '').trim();
+        if (!product) {
+            runStatus.textContent = 'Enter a product name';
+            return;
+        }
+        runStatus.textContent = 'Starting...';
+        try {
+            const resp = await fetch(apiUrl('/api/run'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product }),
+            });
+            if (!resp.ok) {
+                runStatus.textContent = 'Server busy or error';
+                return;
+            }
+            const data = await resp.json();
+            if (data.status === 'started') {
+                runStatus.textContent = 'Running...';
+                pollStatus();
+            } else {
+                runStatus.textContent = 'Failed to start';
+            }
+        } catch {
+            runStatus.textContent = 'Request failed';
+        }
+    }
+
+    if (runBtn) {
+        runBtn.addEventListener('click', triggerRun);
+    }
+    if (runInput) {
+        runInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') triggerRun();
+        });
+    }
 })();

@@ -18,6 +18,8 @@ class ProductSearchService:
 
     async def search_amazon(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
         """Search Amazon product data via RapidAPI."""
+        if not self.api_key:
+            return []
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 resp = await client.get(
@@ -47,6 +49,8 @@ class ProductSearchService:
 
     async def search_alibaba(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
         """Search Alibaba via RapidAPI."""
+        if not self.api_key:
+            return []
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 resp = await client.get(

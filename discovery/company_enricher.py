@@ -20,6 +20,11 @@ class CompanyEnricher:
         self.exchange_key = os.getenv("EXCHANGE_RATE_API_KEY", "")
         self.timeout = 8.0
 
+    @staticmethod
+    def _offline_mode() -> bool:
+        flag = os.getenv("OFFLINE_MODE", "").strip().lower()
+        return flag in {"1", "true", "yes", "on"}
+
     async def geocode_company(
         self, company_name: str, location_hint: str = ""
     ) -> Optional[Dict[str, Any]]:
@@ -28,6 +33,8 @@ class CompanyEnricher:
         if query in _geo_cache:
             lat, lng = _geo_cache[query]
             return {"lat": lat, "lng": lng}
+        if self._offline_mode() or not self.geocoding_key:
+            return None
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 resp = await client.get(
@@ -51,6 +58,8 @@ class CompanyEnricher:
         key = f"{from_currency}_{to_currency}"
         if key in _fx_cache:
             return _fx_cache[key]
+        if self._offline_mode() or not self.exchange_key:
+            return 1.0
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 resp = await client.get(

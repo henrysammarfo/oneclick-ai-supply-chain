@@ -1,10 +1,11 @@
 """
-RapidAPI OpenAI wrapper - drop-in replacement for OpenAI client.
-Uses RapidAPI's GPT-4 endpoint instead of direct OpenAI API.
+RapidAPI LLM wrapper - drop-in replacement for OpenAI client.
+Supports multiple RapidAPI providers via RAPIDAPI_PROVIDER.
 """
 
 import os
-from typing import List, Dict, Any
+import json
+from typing import List, Dict, Any, Tuple
 import httpx
 from loguru import logger
 from dotenv import load_dotenv
@@ -17,12 +18,54 @@ class RapidAPIOpenAI:
 
     def __init__(self):
         self.api_key = os.getenv("RAPIDAPI_KEY")
-        self.host = os.getenv(
-            "RAPIDAPI_OPENAI_HOST",
-            "cheapest-gpt-4-turbo-gpt-4-vision-chatgpt-openai-ai-api.p.rapidapi.com",
-        )
+        self.provider = os.getenv("RAPIDAPI_PROVIDER", "chat-gpt26").strip().lower()
         self.model = os.getenv("OPENAI_MODEL", "gpt-4o")
+        self.alt_model = os.getenv("RAPIDAPI_LLM_MODEL", "GPT-5-mini")
+
+        default_host = "cheapest-gpt-4-turbo-gpt-4-vision-chatgpt-openai-ai-api.p.rapidapi.com"
+        if self.provider == "chat-gpt26":
+            default_host = "chat-gpt26.p.rapidapi.com"
+        elif self.provider == "open-ai21":
+            default_host = "open-ai21.p.rapidapi.com"
+
+        self.host = os.getenv("RAPIDAPI_OPENAI_HOST", default_host)
         self.base_url = f"https://{self.host}"
+
+    def _build_request(
+        self,
+        messages: List[Dict[str, str]],
+        max_tokens: int,
+        temperature: float,
+    ) -> Tuple[str, Dict[str, Any]]:
+        if self.provider == "open-ai21":
+            url = f"{self.base_url}/conversationllama"
+            payload = {"messages": messages, "web_access": False}
+            return url, payload
+        if self.provider == "chat-gpt26":
+            url = f"{self.base_url}/"
+            payload = {"model": self.alt_model, "messages": messages}
+            return url, payload
+
+        url = f"{self.base_url}/v1/chat/completions"
+        payload = {
+            "messages": messages,
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }
+        return url, payload
+
+    @staticmethod
+    def _extract_text(data: Any) -> str:
+        if isinstance(data, str):
+            return data
+        if isinstance(data, dict):
+            if "choices" in data and data["choices"]:
+                return data["choices"][0]["message"]["content"]
+            for key in ("result", "response", "text", "output"):
+                if key in data:
+                    return str(data[key])
+        return json.dumps(data)
 
     async def create_completion(
         self,
@@ -31,14 +74,7 @@ class RapidAPIOpenAI:
         temperature: float = 0.7,
     ) -> str:
         """Create chat completion via RapidAPI."""
-        url = f"{self.base_url}/v1/chat/completions"
-
-        payload = {
-            "messages": messages,
-            "model": self.model,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-        }
+        url, payload = self._build_request(messages, max_tokens, temperature)
 
         headers = {
             "x-rapidapi-key": self.api_key,
@@ -52,8 +88,8 @@ class RapidAPIOpenAI:
             )
             response.raise_for_status()
             data = response.json()
-            content = data["choices"][0]["message"]["content"]
-            logger.debug(f"RapidAPI completion: {len(content)} chars")
+            content = self._extract_text(data)
+            logger.info(f"RapidAPI completion ({self.provider}): {len(content)} chars")
             return content
 
     class _ChatCompletions:
@@ -96,5 +132,7 @@ def get_openai_client() -> RapidAPIOpenAI:
     global _client
     if _client is None:
         _client = RapidAPIOpenAI()
-        logger.info(f"RapidAPI OpenAI client initialized (model: {_client.model})")
+        logger.info(
+            f"RapidAPI client initialized (provider: {_client.provider}, host: {_client.host})"
+        )
     return _client

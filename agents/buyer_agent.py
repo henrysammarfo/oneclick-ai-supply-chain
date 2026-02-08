@@ -1,4 +1,4 @@
-"""
+﻿"""
 Buyer Agent - LangGraph + GPT-4 powered product decomposition.
 Decomposes ANY complex product into components, evaluates supplier bids.
 """
@@ -57,42 +57,82 @@ class BuyerAgent(BaseAgent):
             "component_count": len(components),
         }
 
+    def _get_llm_client(self):
+        """Return OpenAI client if OPENAI_API_KEY is set, else RapidAPI client."""
+        openai_key = os.getenv("OPENAI_API_KEY", "")
+        if openai_key:
+            from openai import AsyncOpenAI
+            return AsyncOpenAI(api_key=openai_key)
+        from utils.rapidapi_openai import get_openai_client
+        return get_openai_client()
+
+    def _offline_mode(self) -> bool:
+        flag = os.getenv("OFFLINE_MODE", "").strip().lower()
+        if flag in {"1", "true", "yes", "on"}:
+            return True
+        has_openai = bool(os.getenv("OPENAI_API_KEY", ""))
+        has_rapidapi = bool(os.getenv("RAPIDAPI_KEY", ""))
+        return not (has_openai or has_rapidapi)
+
+    def _extract_content(self, response):
+        """Handle both OpenAI response objects and RapidAPI string responses."""
+        if isinstance(response, str):
+            return response
+        if hasattr(response, "choices"):
+            return response.choices[0].message.content
+        return str(response)
+
+    def _parse_components(self, content: str) -> List[Dict[str, Any]]:
+        """Parse JSON array from model output with simple recovery."""
+        try:
+            return json.loads(content)
+        except Exception:
+            start = content.find("[")
+            end = content.rfind("]")
+            if start != -1 and end != -1 and end > start:
+                return json.loads(content[start : end + 1])
+        raise ValueError("Failed to parse component JSON")
+
     async def decompose_product(self, product_name: str) -> List[Dict[str, Any]]:
         """Use GPT-4 to decompose a product into components."""
         self.log_action("decompose_start", {"product": product_name})
 
         try:
-            from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            if self._offline_mode():
+                logger.info("Offline mode enabled or no LLM keys found, using fallback decomposition")
+                return self._fallback_decomposition(product_name)
 
-            prompt = f"""You are a supply chain expert. Decompose "{product_name}" into its key components/parts needed for manufacturing or assembly.
+            client = self._get_llm_client()
+            model = os.getenv("OPENAI_MODEL", "gpt-4o")
+
+            prompt = f"""You are a supply chain expert. Decompose \"{product_name}\" into its key components/parts needed for manufacturing or assembly.
 
 For each component return a JSON array where each item has:
-- "name": component name
-- "category": category (engine, chassis, electronics, interior, body, safety, etc.)
-- "quantity": number needed
-- "specifications": brief spec description
-- "estimated_cost_usd": estimated unit cost in USD
-- "priority": "critical", "important", or "optional"
-- "lead_time_days": estimated procurement lead time
+- \"name\": component name
+- \"category\": category (engine, chassis, electronics, interior, body, safety, etc.)
+- \"quantity\": number needed
+- \"specifications\": brief spec description
+- \"estimated_cost_usd\": estimated unit cost in USD
+- \"priority\": \"critical\", \"important\", or \"optional\"
+- \"lead_time_days\": estimated procurement lead time
 
 Return 20-50 components. Be specific with real part names and realistic costs.
 Return ONLY the JSON array, no other text."""
 
             response = await client.chat.completions.create(
-                model="gpt-4",
+                model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=4000,
             )
 
-            content = response.choices[0].message.content.strip()
+            content = self._extract_content(response).strip()
             # Strip markdown code blocks if present
             if content.startswith("```"):
                 content = content.split("\n", 1)[1]
                 content = content.rsplit("```", 1)[0]
 
-            self.components = json.loads(content)
+            self.components = self._parse_components(content)
             logger.info(f"Decomposed {product_name} into {len(self.components)} components")
             return self.components
 

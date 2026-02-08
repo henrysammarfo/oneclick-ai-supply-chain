@@ -1,7 +1,10 @@
-"""WebSocket-compatible message bus for agent-to-agent communication."""
+﻿"""WebSocket-compatible message bus for agent-to-agent communication."""
 
 from typing import Dict, List, Callable, Any, Optional
 from loguru import logger
+import os
+import json
+from pathlib import Path
 
 from agents.base_agent import Message
 
@@ -9,10 +12,13 @@ from agents.base_agent import Message
 class MessageBus:
     """Central message router with conversation logging."""
 
-    def __init__(self):
+    def __init__(self, feed_path: Optional[str] = None):
         self._handlers: Dict[str, Callable] = {}
         self._history: List[Dict[str, Any]] = []
         self._subscribers: List[Callable] = []
+        self._feed_path = feed_path or os.getenv("MESSAGE_FEED_PATH", "")
+        if self._feed_path:
+            Path(self._feed_path).parent.mkdir(parents=True, exist_ok=True)
         logger.info("MessageBus initialized")
 
     def register_handler(self, agent_id: str, handler: Callable):
@@ -48,6 +54,19 @@ class MessageBus:
         """Subscribe to all messages for real-time monitoring."""
         self._subscribers.append(callback)
 
+    def clear_feed(self):
+        """Truncate feed file for a clean demo run."""
+        if not self._feed_path:
+            return
+        Path(self._feed_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(self._feed_path).write_text("", encoding="utf-8")
+
+    def _write_feed(self, entry: Dict[str, Any]):
+        if not self._feed_path:
+            return
+        with open(self._feed_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+
     def _log_message(self, message: Message):
         entry = {
             "from": message.from_agent[:8],
@@ -57,6 +76,7 @@ class MessageBus:
             "payload_keys": list(message.payload.keys()),
         }
         self._history.append(entry)
+        self._write_feed(entry)
         for sub in self._subscribers:
             try:
                 sub(entry)

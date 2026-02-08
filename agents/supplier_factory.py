@@ -1,7 +1,6 @@
 """
-Dynamic Supplier Agent Factory - CrewAI v1.9.3 supplier agents.
+Dynamic Supplier Agent Factory.
 Creates one agent per discovered supplier with unique negotiation strategies.
-Wraps CrewAI Agent/Task/Crew for cross-framework interoperability.
 """
 
 import random
@@ -9,14 +8,6 @@ from typing import Dict, List, Optional, Any
 from loguru import logger
 
 from .base_agent import BaseAgent, AgentIdentity, Message
-
-# CrewAI v1.9.3 imports (optional - gracefully degrade if not installed)
-try:
-    from crewai import Agent as CrewAgent, Task as CrewTask, Crew
-    CREWAI_AVAILABLE = True
-except ImportError:
-    CREWAI_AVAILABLE = False
-    logger.warning("CrewAI not installed - supplier agents run in standalone mode")
 
 
 STRATEGIES = ["aggressive", "moderate", "conservative"]
@@ -150,8 +141,7 @@ class SupplierAgent(BaseAgent):
 
 
 class SupplierFactory:
-    """Creates supplier agents dynamically from discovery results.
-    Uses CrewAI v1.9.3 when available for cross-framework interoperability."""
+    """Creates supplier agents dynamically from discovery results."""
 
     @staticmethod
     def create_supplier_agent(supplier_data: Dict[str, Any]) -> "SupplierAgent":
@@ -164,53 +154,3 @@ class SupplierFactory:
         fleet = [SupplierFactory.create_supplier_agent(s) for s in suppliers_data]
         logger.info(f"Created fleet of {len(fleet)} supplier agents")
         return fleet
-
-    @staticmethod
-    def create_crewai_crew(
-        supplier_agents: List["SupplierAgent"],
-        component: str,
-        requirements: Dict[str, Any],
-    ) -> Optional[Any]:
-        """Create a CrewAI v1.9.3 Crew for collaborative bidding.
-        Demonstrates cross-framework interop (LangGraph buyer + CrewAI suppliers)."""
-        if not CREWAI_AVAILABLE:
-            logger.info("CrewAI not available, skipping crew creation")
-            return None
-
-        crew_agents = []
-        tasks = []
-        for sa in supplier_agents:
-            # CrewAI v1.9.3 Agent API
-            crew_agent = CrewAgent(
-                role=f"Supplier - {sa.company_name}",
-                goal=f"Provide the best bid for {component} based on {sa.specialization} expertise",
-                backstory=(
-                    f"{sa.company_name} is based in {sa.location} ({sa.country}). "
-                    f"Strategy: {sa.strategy}. Quality rating: {sa.quality_rating}."
-                ),
-                verbose=False,
-                allow_delegation=False,
-            )
-            crew_agents.append(crew_agent)
-
-            # CrewAI v1.9.3 Task API
-            task = CrewTask(
-                description=(
-                    f"Generate a competitive bid for '{component}'. "
-                    f"Estimated cost: ${requirements.get('estimated_cost_usd', 0):,}. "
-                    f"Quantity: {requirements.get('quantity', 1)}. "
-                    f"Lead time: {requirements.get('lead_time_days', 14)} days."
-                ),
-                expected_output="A bid with price, delivery timeline, and quality guarantees",
-                agent=crew_agent,
-            )
-            tasks.append(task)
-
-        # CrewAI v1.9.3 Crew API
-        crew = Crew(
-            agents=crew_agents,
-            tasks=tasks,
-            verbose=False,
-        )
-        logger.info(f"CrewAI Crew created: {len(crew_agents)} agents for '{component}'")
-        return crew

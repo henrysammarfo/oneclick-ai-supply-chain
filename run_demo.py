@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 OneClick AI - Supply Chain Agent Network Demo Runner
 Run: python run_demo.py --scenario ferrari
@@ -24,21 +24,55 @@ load_dotenv()
 console = Console()
 
 BANNER = """
- ██████╗ ███╗   ██╗███████╗ ██████╗██╗     ██╗ ██████╗██╗  ██╗
-██╔═══██╗████╗  ██║██╔════╝██╔════╝██║     ██║██╔════╝██║ ██╔╝
-██║   ██║██╔██╗ ██║█████╗  ██║     ██║     ██║██║     █████╔╝
-██║   ██║██║╚██╗██║██╔══╝  ██║     ██║     ██║██║     ██╔═██╗
-╚██████╔╝██║ ╚████║███████╗╚██████╗███████╗██║╚██████╗██║  ██╗
- ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ╚═════╝╚══════╝╚═╝ ╚═════╝╚═╝  ╚═╝
+ ██████╗ █████╗   ██╗████████╗ ██████╗██╗     ██╗ ██████╗██╗  ██╗
+██╔═══██╗██████╗  ██║╚══██╔══╝██╔═══██╗██║     ██║██╔════╝██║ ██╔╝
+██║   ██║██╔██╗ ██║   ██║   ██║   ██║██║     ██║██║     █████╔╝
+██║   ██║██║╚██╗██║   ██║   ██║   ██║██║     ██║██║     ██╔═██╗
+╚██████╔╝██║ ╚████║   ██║   ╚██████╔╝███████╗██║╚██████╗██║  ██╗
+ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚══════╝╚═╝ ╚═════╝╚═╝  ╚═╝
            AI Supply Chain Agent Network
 """
+
+BANNER_ASCII = """
+  ONECLICK AI SUPPLY CHAIN AGENT NETWORK
+  -------------------------------------
+"""
+
+
+def _supports_utf8() -> bool:
+    encoding = (getattr(sys.stdout, "encoding", "") or "").lower()
+    return "utf" in encoding
+
+
+def _progress(console: Console) -> Progress:
+    if _supports_utf8():
+        return Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        )
+    return Progress(TextColumn("[progress.description]{task.description}"), console=console)
 
 
 async def run_pipeline(product: str, scenario_name: str = ""):
     """Run the full supply chain agent pipeline."""
 
-    console.print(Panel(BANNER, style="bold cyan", title="Hack-Nation 2026"))
+    banner = BANNER if _supports_utf8() else BANNER_ASCII
+    console.print(Panel(banner, style="bold cyan", title="Hack-Nation 2026"))
     console.print(f"\n[bold yellow]Product:[/] {product}\n")
+
+    feed_path = os.getenv("MESSAGE_FEED_PATH", "logs/agent_feed.jsonl")
+    graph_path = os.getenv("SUPPLY_GRAPH_PATH", "supply_graph.json")
+
+    offline_flag = os.getenv("OFFLINE_MODE", "").strip().lower()
+    has_openai = bool(os.getenv("OPENAI_API_KEY", ""))
+    has_rapidapi = bool(os.getenv("RAPIDAPI_KEY", ""))
+    has_google = bool(os.getenv("GOOGLE_SEARCH_API_KEY", "")) and bool(
+        os.getenv("GOOGLE_SEARCH_ENGINE_ID", "")
+    )
+    if offline_flag not in {"1", "true", "yes", "on"} and not (has_openai or has_rapidapi or has_google):
+        os.environ["OFFLINE_MODE"] = "1"
+        console.print("[bold yellow]Offline mode enabled (no API keys found). Using mock data.[/]")
 
     # 1. Initialize
     from registry.agent_registry import AgentRegistry
@@ -52,12 +86,13 @@ async def run_pipeline(product: str, scenario_name: str = ""):
     from visualization.supply_graph import SupplyGraphBuilder
 
     registry = AgentRegistry(db_url="sqlite:///demo_registry.db")
-    bus = MessageBus()
+    bus = MessageBus(feed_path=feed_path)
+    bus.clear_feed()
     negotiation = NegotiationEngine()
     coordination = CoordinationProtocol()
     graph_builder = SupplyGraphBuilder()
 
-    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
+    with _progress(console) as progress:
 
         # 2. Create buyer agent and decompose product
         task = progress.add_task("[cyan]Creating Buyer Agent...", total=None)
@@ -70,6 +105,9 @@ async def run_pipeline(product: str, scenario_name: str = ""):
         result = await buyer.execute_task({"product": product})
         components = result["components"]
         progress.update(task, description=f"[green]Decomposed into {len(components)} components")
+
+    graph_builder.build_graph(product, components, {})
+    graph_builder.export_json(graph_path)
 
     # Show components table
     comp_table = Table(title=f"Components for {product}", style="cyan")
@@ -89,7 +127,7 @@ async def run_pipeline(product: str, scenario_name: str = ""):
         )
     console.print(comp_table)
 
-    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
+    with _progress(console) as progress:
 
         # 3. Discover suppliers
         task = progress.add_task("[cyan]Discovering real suppliers...", total=None)
@@ -97,6 +135,21 @@ async def run_pipeline(product: str, scenario_name: str = ""):
         discovery = UniversalDiscoveryService()
         suppliers_data = await discovery.discover_suppliers(product, components)
         progress.update(task, description=f"[green]Found {len(suppliers_data)} suppliers")
+
+        # Snapshot graph with supplier candidates
+        supplier_map = {}
+        for s in suppliers_data:
+            comp = s.get("component") or s.get("specialization")
+            if comp and comp not in supplier_map:
+                supplier_map[comp] = {
+                    "supplier_name": s.get("company_name", ""),
+                    "location": s.get("location", ""),
+                    "country": s.get("country", ""),
+                    "total_price": s.get("estimated_price", 0),
+                    "delivery_days": s.get("delivery_days", 0),
+                }
+        graph_builder.build_graph(product, components, supplier_map)
+        graph_builder.export_json(graph_path)
 
         # 4. Create supplier agents
         task = progress.add_task("[cyan]Spawning supplier agents...", total=None)
@@ -114,7 +167,7 @@ async def run_pipeline(product: str, scenario_name: str = ""):
             # Match suppliers to component
             relevant = supplier_agents[:5]  # Use available suppliers
             if relevant:
-                winner = await negotiation.run_auction(name, relevant, comp)
+                winner = await negotiation.run_auction(name, relevant, comp, bus=bus)
                 if winner:
                     winners[name] = winner
         progress.update(task, description=f"[green]Negotiated {len(winners)} contracts")
@@ -135,8 +188,9 @@ async def run_pipeline(product: str, scenario_name: str = ""):
 
         # 8. Build graph
         task = progress.add_task("[cyan]Building supply graph...", total=None)
-        graph = graph_builder.build_graph(product, components, winners)
-        graph_builder.export_json("supply_graph.json")
+        routes = (validation.get("logistics") or {}).get("routes", [])
+        graph = graph_builder.build_graph(product, components, winners, routes=routes)
+        graph_builder.export_json(graph_path)
         stats = graph_builder.get_statistics()
         progress.update(task, description="[green]Graph exported")
 

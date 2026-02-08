@@ -1,8 +1,10 @@
 """
 Universal Discovery Service - Orchestrates supplier discovery from all sources.
 Finds REAL suppliers for ANY product using RapidAPI, Google Search, and enrichment.
+Falls back to mock data when running offline or missing keys.
 """
 
+import os
 from typing import List, Dict, Any
 from loguru import logger
 
@@ -23,6 +25,21 @@ class UniversalDiscoveryService:
         self.supplier_finder = SupplierFinder()
         self.enricher = CompanyEnricher()
 
+    def _offline_mode(self) -> bool:
+        flag = os.getenv("OFFLINE_MODE", "").strip().lower()
+        if flag in {"1", "true", "yes", "on"}:
+            return True
+        has_rapidapi = bool(os.getenv("RAPIDAPI_KEY", ""))
+        return not has_rapidapi
+
+    def _google_enabled(self) -> bool:
+        flag = os.getenv("ENABLE_GOOGLE_SEARCH", "").strip().lower()
+        if flag not in {"1", "true", "yes", "on"}:
+            return False
+        return bool(os.getenv("GOOGLE_SEARCH_API_KEY", "")) and bool(
+            os.getenv("GOOGLE_SEARCH_ENGINE_ID", "")
+        )
+
     async def discover_suppliers(
         self,
         product_name: str,
@@ -35,6 +52,10 @@ class UniversalDiscoveryService:
         """
         logger.info(f"Starting discovery for '{product_name}' ({len(components)} components)")
         suppliers: List[Dict[str, Any]] = []
+
+        if self._offline_mode():
+            logger.warning("Offline mode or missing API keys; using mock suppliers")
+            return get_mock_suppliers(product_name, count=15)
 
         for comp in components[:15]:  # Cap for API rate limits
             name = comp.get("name", "")
@@ -53,18 +74,19 @@ class UniversalDiscoveryService:
                 })
 
             # 2. Search Google for specialist suppliers
-            google_results = await self.supplier_finder.find_suppliers(name, category)
-            ranked = self.supplier_finder.rank_suppliers(google_results)
-            for g in ranked[:2]:
-                suppliers.append({
-                    "company_name": g.get("company_name", ""),
-                    "specialization": name,
-                    "location": "Global",
-                    "website": g.get("website", ""),
-                    "source": "google_search",
-                    "component": name,
-                    "relevance": g.get("relevance_score", 0.5),
-                })
+            if self._google_enabled():
+                google_results = await self.supplier_finder.find_suppliers(name, category)
+                ranked = self.supplier_finder.rank_suppliers(google_results)
+                for g in ranked[:2]:
+                    suppliers.append({
+                        "company_name": g.get("company_name", ""),
+                        "specialization": name,
+                        "location": "Global",
+                        "website": g.get("website", ""),
+                        "source": "google_search",
+                        "component": name,
+                        "relevance": g.get("relevance_score", 0.5),
+                    })
 
         # 3. Enrich with geocoding
         enriched = []

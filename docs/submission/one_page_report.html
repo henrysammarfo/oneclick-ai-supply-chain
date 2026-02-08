@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>OneClick AI - 1-Page Report</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 28px; color: #111; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    h2 { font-size: 14px; margin: 14px 0 6px; }
+    p, li { font-size: 11px; line-height: 1.4; }
+    ul { margin: 6px 0 0 18px; }
+    .small { font-size: 10px; color: #444; }
+  </style>
+</head>
+<body>
+  <h1>OneClick AI — 1‑Page Report</h1>
+
+  <h2>1) Problem & Challenge</h2>
+  <p>Global supply chains depend on manual coordination across organizations, systems, and jurisdictions. Discovery, negotiation, and logistics are still email‑and‑spreadsheet workflows, making sourcing slow and opaque. The challenge is to make coordination programmable across independent actors.</p>
+
+  <h2>2) Target Audience</h2>
+  <p>Procurement teams, manufacturers, logistics operators, and enterprise buyers who need fast, verifiable sourcing across multiple suppliers and tiers.</p>
+
+  <h2>3) Solution & Core Features</h2>
+  <p>OneClick AI is a NANDA‑inspired network of agents that turns a single intent into a supply plan.</p>
+  <ul>
+    <li>Agent registry with identity + capability facts</li>
+    <li>Discovery of real supplier candidates (RapidAPI product search)</li>
+    <li>Negotiation cascade with a message bus</li>
+    <li>Logistics + compliance validation</li>
+    <li>Live D3 graph of components, suppliers, and routes</li>
+  </ul>
+
+  <h2>4) Unique Selling Proposition (USP)</h2>
+  <p>Unlike centralized procurement software, OneClick AI demonstrates agent‑native interoperability: independent services discover each other dynamically, negotiate in real time, and publish a shared execution plan.</p>
+
+  <h2>5) Implementation & Technology</h2>
+  <p>Python 3.11, FastAPI, NetworkX, D3.js, RapidAPI product search, WebSocket feed, and a NANDA‑style registry. The system emits artifacts (supply_graph.json, agent_feed.jsonl) for audit and replay.</p>
+
+  <h2>6) Results & Impact</h2>
+  <p>The demo produces a full supply plan in minutes: components, suppliers, prices, delivery estimates, and compliance checks. The live UI makes coordination observable, reducing integration friction and enabling faster, more resilient sourcing.</p>
+
+  <p class="small">Optional reflection: With 24 more hours we would add reputation scoring and disruption recovery.</p>
+</body>
+</html>

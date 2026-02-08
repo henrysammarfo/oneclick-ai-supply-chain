@@ -9,6 +9,13 @@
 </head>
 <body>
     <div class="app">
+        <div class="memphis-decor" aria-hidden="true">
+            <span class="shape circle"></span>
+            <span class="shape triangle"></span>
+            <span class="shape zigzag"></span>
+            <span class="shape squiggle"></span>
+            <span class="shape dot-grid"></span>
+        </div>
         <header class="header">
             <h1>OneClick AI</h1>
             <p class="subtitle">Supply Chain Agent Network</p>
@@ -33,6 +40,14 @@
                 <div class="panel">
                     <h3>Agent Feed</h3>
                     <div id="agent-feed" class="feed"></div>
+                </div>
+                <div class="panel">
+                    <h3>Run Demo</h3>
+                    <div class="run-form">
+                        <input id="run-product" type="text" placeholder="e.g., fridge, plane, ferrari" />
+                        <button id="run-button" type="button">Run</button>
+                    </div>
+                    <div id="run-status" class="run-status">Idle</div>
                 </div>
             </aside>
             <div class="graph-container">

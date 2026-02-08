@@ -21,6 +21,11 @@ class SupplierFinder:
         self, component_name: str, category: str = ""
     ) -> List[Dict[str, Any]]:
         """Search Google for suppliers of a specific component."""
+        flag = os.getenv("ENABLE_GOOGLE_SEARCH", "").strip().lower()
+        if flag not in {"1", "true", "yes", "on"}:
+            return []
+        if not self.api_key or not self.cx:
+            return []
         query = f"{component_name} manufacturer supplier wholesale {category}".strip()
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
