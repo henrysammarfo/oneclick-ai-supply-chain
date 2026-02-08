@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OneClick AI - Supply Chain Network</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>OneClick AI</h1>
+            <p class="subtitle">Supply Chain Agent Network</p>
+        </header>
+        <div class="main">
+            <aside class="sidebar">
+                <div class="panel">
+                    <h3>Network Stats</h3>
+                    <div class="stat"><span class="label">Components</span><span class="value" id="stat-components">0</span></div>
+                    <div class="stat"><span class="label">Suppliers</span><span class="value" id="stat-suppliers">0</span></div>
+                    <div class="stat"><span class="label">Routes</span><span class="value" id="stat-routes">0</span></div>
+                    <div class="stat"><span class="label">Total Cost</span><span class="value" id="stat-cost">$0</span></div>
+                    <div class="stat"><span class="label">Delivery</span><span class="value" id="stat-delivery">0 days</span></div>
+                </div>
+                <div class="panel">
+                    <h3>Legend</h3>
+                    <div class="legend-item"><span class="dot" style="background:#ffd700"></span> Product</div>
+                    <div class="legend-item"><span class="dot" style="background:#00d4ff"></span> Component</div>
+                    <div class="legend-item"><span class="dot" style="background:#00ff88"></span> Supplier</div>
+                    <div class="legend-item"><span class="line-dash"></span> Shipping Route</div>
+                </div>
+                <div class="panel">
+                    <h3>Agent Feed</h3>
+                    <div id="agent-feed" class="feed"></div>
+                </div>
+            </aside>
+            <div class="graph-container">
+                <svg id="graph"></svg>
+                <div id="tooltip" class="tooltip"></div>
+            </div>
+        </div>
+    </div>
+    <script src="graph.js"></script>
+</body>
+</html>

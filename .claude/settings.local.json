@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(npx hardhat:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm install:*)",
+      "Bash(npm search:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "browser-use",
+    "imagesorcery-mcp",
+    "automatalabs-playwright-server",
+    "executeautomation-playwright-server",
+    "playwright-server",
+    "chrome-devtools",
+    "browsermcp",
+    "context7",
+    "memory",
+    "github",
+    "fetch",
+    "firecrawl-mcp",
+    "stripe",
+    "trello",
+    "circleci-mcp-server",
+    "notionApi",
+    "DeepGraph Next.js MCP",
+    "DeepGraph React MCP",
+    "DeepGraph TypeScript MCP",
+    "DeepGraph Vue MCP",
+    "Figma Dev Mode MCP",
+    "sentry",
+    "postman-api-http-server",
+    "Neon",
+    "webflow",
+    "postgres-documentation",
+    "huggingface",
+    "filesystem",
+    "postgresql",
+    "mysql",
+    "MongoDB",
+    "supabase",
+    "browserbase",
+    "elevenlabs",
+    "firefly",
+    "terraform",
+    "elasticsearch-mcp-server",
+    "serena",
+    "grafana"
+  ]
+}

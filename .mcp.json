@@ -1,0 +1,233 @@
+{
+  "mcpServers": {
+    "browser-use": {
+      "command": "C:\\Users\\jessi\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python313\\Scripts\\uvx.exe",
+      "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key-here"
+      }
+    },
+    "imagesorcery-mcp": {
+      "command": "python",
+      "args": ["-m", "imagesorcery_mcp"],
+      "transportType": "stdio",
+      "autoApprove": ["blur", "change_color", "config", "crop", "detect", "draw_arrows", "draw_circles", "draw_lines", "draw_rectangles", "draw_texts", "fill", "find", "get_metainfo", "ocr", "overlay", "resize", "rotate"],
+      "timeout": 100
+    },
+    "automatalabs-playwright-server": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@automatalabs/mcp-server-playwright"]
+    },
+    "executeautomation-playwright-server": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@executeautomation/playwright-mcp-server"]
+    },
+    "playwright-server": {
+      "command": "cmd",
+      "args": ["/c", "npx", "@playwright/mcp@latest"]
+    },
+    "chrome-devtools": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "chrome-devtools-mcp@latest"]
+    },
+    "browsermcp": {
+      "command": "cmd",
+      "args": ["/c", "npx", "@browsermcp/mcp@latest"]
+    },
+    "context7": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@upstash/context7-mcp"]
+    },
+    "memory": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-memory"]
+    },
+    "github": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_TOKEN>"
+      }
+    },
+    "fetch": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-fetch"]
+    },
+    "firecrawl-mcp": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "firecrawl-mcp"],
+      "env": {
+        "FIRECRAWL_API_KEY": "YOUR-API-KEY"
+      }
+    },
+    "stripe": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@stripe/mcp", "--tools=all"],
+      "env": {
+        "STRIPE_SECRET_KEY": "your_stripe_secret_key_here"
+      }
+    },
+    "trello": {
+      "command": "cmd",
+      "args": ["/c", "npx", "@delorenj/mcp-server-trello"],
+      "env": {
+        "TRELLO_API_KEY": "your-api-key",
+        "TRELLO_TOKEN": "your-token"
+      }
+    },
+    "circleci-mcp-server": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@circleci/mcp-server-circleci"],
+      "env": {
+        "CIRCLECI_TOKEN": "your-circleci-token",
+        "CIRCLECI_BASE_URL": "https://circleci.com"
+      }
+    },
+    "notionApi": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "NOTION_TOKEN": "ntn_****"
+      }
+    },
+    "DeepGraph Next.js MCP": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-code-graph@latest", "vercel/next.js"]
+    },
+    "DeepGraph React MCP": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-code-graph@latest", "facebook/react"]
+    },
+    "DeepGraph TypeScript MCP": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-code-graph@latest", "microsoft/TypeScript"]
+    },
+    "DeepGraph Vue MCP": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-code-graph@latest", "vuejs/core"]
+    },
+    "Figma Dev Mode MCP": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-remote", "http://127.0.0.1:3845/mcp"]
+    },
+    "sentry": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-remote", "https://mcp.sentry.dev/mcp"]
+    },
+    "postman-api-http-server": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-remote", "https://mcp.postman.com/mcp"],
+      "env": {
+        "AUTHORIZATION": "Bearer ${input:postman-api-key}"
+      }
+    },
+    "Neon": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-remote", "https://mcp.neon.tech/mcp"]
+    },
+    "webflow": {
+      "command": "cmd",
+      "args": ["/c", "npx", "mcp-remote", "https://mcp.webflow.com/sse"]
+    },
+    "postgres-documentation": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-remote", "https://mcp.tigerdata.com/docs"]
+    },
+    "huggingface": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mcp-remote", "https://huggingface.co/mcp"],
+      "env": {
+        "AUTHORIZATION": "Bearer <YOUR_HF_TOKEN>"
+      }
+    },
+    "filesystem": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\jessi\\Desktop"],
+      "comment": "Change path to your allowed directory"
+    },
+    "postgresql": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "postgresql://user:password@localhost:5432/dbname"
+      }
+    },
+    "mysql": {
+      "command": "C:\\Users\\jessi\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python313\\Scripts\\uvx.exe",
+      "args": ["mcp-server-mysql"],
+      "env": {
+        "MYSQL_CONNECTION_STRING": "mysql://user:password@localhost:3306/dbname"
+      }
+    },
+    "MongoDB": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "mongodb-mcp-server@latest", "--readOnly"],
+      "env": {
+        "MDB_MCP_CONNECTION_STRING": "mongodb://localhost:27017/myDatabase"
+      }
+    },
+    "supabase": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@supabase/mcp-server-supabase@latest", "--read-only", "--project-ref=<project-ref>"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "<personal-access-token>"
+      }
+    },
+    "browserbase": {
+      "command": "cmd",
+      "args": ["/c", "npx", "@browserbasehq/mcp-server-browserbase"],
+      "env": {
+        "BROWSERBASE_API_KEY": "",
+        "BROWSERBASE_PROJECT_ID": "",
+        "GEMINI_API_KEY": ""
+      }
+    },
+    "elevenlabs": {
+      "command": "C:\\Users\\jessi\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python313\\Scripts\\uvx.exe",
+      "args": ["elevenlabs-mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": "<your-api-key>",
+        "ELEVENLABS_MCP_BASE_PATH": "~/Desktop",
+        "ELEVENLABS_MCP_OUTPUT_MODE": "files"
+      }
+    },
+    "firefly": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@fireflyai/firefly-mcp"],
+      "env": {
+        "FIREFLY_ACCESS_KEY": "your_access_key",
+        "FIREFLY_SECRET_KEY": "your_secret_key"
+      }
+    },
+    "terraform": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server:0.2.3"],
+      "comment": "Requires Docker Desktop running"
+    },
+    "elasticsearch-mcp-server": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "ES_URL", "-e", "ES_API_KEY", "docker.elastic.co/mcp/elasticsearch", "stdio"],
+      "env": {
+        "ES_URL": "<elasticsearch-cluster-url>",
+        "ES_API_KEY": "<elasticsearch-API-key>"
+      },
+      "comment": "Requires Docker Desktop running"
+    },
+    "serena": {
+      "command": "C:\\Users\\jessi\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python313\\Scripts\\uv.exe",
+      "args": ["run", "--directory", "/abs/path/to/serena", "serena", "start-mcp-server"],
+      "comment": "Update path to your serena installation"
+    },
+    "grafana": {
+      "command": "python",
+      "args": ["-m", "mcp_grafana"],
+      "env": {
+        "GRAFANA_URL": "http://localhost:3000",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "<your service account token>",
+        "GRAFANA_USERNAME": "<your username>",
+        "GRAFANA_PASSWORD": "<your password>"
+      },
+      "comment": "Install first: pip install mcp-grafana --break-system-packages"
+    }
+  }
+}
