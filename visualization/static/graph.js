@@ -151,9 +151,21 @@
         const components = data.nodes.filter(n => n.type === 'component').length;
         const suppliers = data.nodes.filter(n => n.type === 'supplier').length;
         const routes = data.links.filter(l => l.type === 'ships_to').length;
+        const totalCost = data.links.reduce((sum, l) => {
+            const raw = (l.price ?? l.total_price ?? l.cost ?? 0);
+            const val = (typeof raw === 'number') ? raw : parseFloat(raw);
+            return sum + (isNaN(val) ? 0 : val);
+        }, 0);
+        const maxDelivery = data.links.reduce((max, l) => {
+            const raw = (l.delivery ?? l.days ?? l.total_days ?? 0);
+            const val = (typeof raw === 'number') ? raw : parseFloat(raw);
+            return Math.max(max, isNaN(val) ? 0 : val);
+        }, 0);
         document.getElementById('stat-components').textContent = components;
         document.getElementById('stat-suppliers').textContent = suppliers;
         document.getElementById('stat-routes').textContent = routes;
+        document.getElementById('stat-cost').textContent = '$' + totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 });
+        document.getElementById('stat-delivery').textContent = maxDelivery + ' days';
     }
 
     function getDemoData() {
