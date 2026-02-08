@@ -133,6 +133,8 @@ Return ONLY the JSON array, no other text."""
                 content = content.rsplit("```", 1)[0]
 
             self.components = self._parse_components(content)
+            if not self.components:
+                raise ValueError("Empty component list from LLM")
             logger.info(f"Decomposed {product_name} into {len(self.components)} components")
             return self.components
 
