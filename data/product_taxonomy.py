@@ -40,6 +40,17 @@ TAXONOMIES: Dict[str, Dict[str, List[str]]] = {
         "sensors": ["accelerometer", "gyroscope", "proximity sensor", "camera module"],
         "housing": ["aluminum chassis", "glass panels", "buttons", "SIM tray"],
     },
+    "aerospace": {
+        "propulsion": ["turbofan engine", "compressor stages", "combustion chamber", "turbine blades", "nacelle"],
+        "airframe": ["fuselage sections", "wing spars", "composite skins", "fasteners", "cargo doors"],
+        "avionics": ["flight computer", "navigation system", "radar", "communications radio", "black box"],
+        "control": ["flight control surfaces", "actuators", "fly-by-wire system", "control cables"],
+        "landing_gear": ["landing gear struts", "brake assemblies", "wheel/tire set", "retraction system"],
+        "electrical": ["power distribution unit", "generator", "battery pack", "wiring harness"],
+        "hydraulics": ["hydraulic pumps", "reservoirs", "valves", "hydraulic lines"],
+        "fuel": ["fuel tanks", "fuel pumps", "fuel lines", "fuel control unit"],
+        "safety": ["oxygen system", "fire suppression", "emergency beacons", "life vests"],
+    },
 }
 
 KEYWORDS: Dict[str, List[str]] = {
@@ -47,6 +58,7 @@ KEYWORDS: Dict[str, List[str]] = {
     "marine": ["yacht", "boat", "ship", "vessel", "catamaran", "sailboat"],
     "hospitality": ["hotel", "resort", "motel", "inn", "lodge", "restaurant"],
     "electronics": ["phone", "laptop", "tablet", "computer", "iphone", "samsung", "tv", "monitor"],
+    "aerospace": ["aircraft", "airplane", "plane", "jet", "turbine", "aerospace", "drone", "helicopter"],
 }
 
 
@@ -78,7 +90,65 @@ class ProductTaxonomy:
                     "priority": "important",
                     "lead_time_days": 14,
                 })
-        return components
+        if components:
+            return components
+        # Generic fallback when category is unknown
+        return [
+            {
+                "name": "core structure",
+                "category": "structure",
+                "quantity": 1,
+                "specifications": "Primary structural assembly",
+                "estimated_cost_usd": 1500,
+                "priority": "critical",
+                "lead_time_days": 21,
+            },
+            {
+                "name": "power system",
+                "category": "power",
+                "quantity": 1,
+                "specifications": "Primary power unit",
+                "estimated_cost_usd": 1200,
+                "priority": "critical",
+                "lead_time_days": 21,
+            },
+            {
+                "name": "control system",
+                "category": "control",
+                "quantity": 1,
+                "specifications": "Control logic and actuators",
+                "estimated_cost_usd": 800,
+                "priority": "important",
+                "lead_time_days": 14,
+            },
+            {
+                "name": "safety systems",
+                "category": "safety",
+                "quantity": 1,
+                "specifications": "Safety and compliance systems",
+                "estimated_cost_usd": 600,
+                "priority": "important",
+                "lead_time_days": 10,
+            },
+            {
+                "name": "enclosure & casing",
+                "category": "body",
+                "quantity": 1,
+                "specifications": "External housing and protection",
+                "estimated_cost_usd": 700,
+                "priority": "important",
+                "lead_time_days": 14,
+            },
+            {
+                "name": "electronics & sensors",
+                "category": "electronics",
+                "quantity": 1,
+                "specifications": "Core sensors and electronics",
+                "estimated_cost_usd": 500,
+                "priority": "important",
+                "lead_time_days": 10,
+            },
+        ]
 
     @staticmethod
     def get_suppliers_by_category(category: str) -> List[str]:
